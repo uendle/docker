@@ -13,16 +13,16 @@ while true; do
 	case "$escolha" in
 	1)
 		echo "Selecione uma das opções abaixo:"
-		echo "1 para atualizar o sistema;"
-		echo "2 para instalar nfs-server;"
-		echo "3 para configurar o nfs;"
-		echo "4 para instalar o docker;"
-		echo "5 para configurar um container mysql;"
-		echo "6 para fazer primeira inserção no banco;"
-		echo "7 para configurar um swarm;"
-		echo "8 pra configurar server web no cluster;"
-		echo "9 instalar e configurar o servidor nginx;"
-		echo "Ou qualquer outro para voltar ao Menu principal;"
+		echo " [1] para atualizar o sistema;"
+		echo " [2] para instalar nfs-server;"
+		echo " [3] para configurar o nfs;"
+		echo " [4] para instalar o docker;"
+		echo " [5] para configurar um container mysql;"
+		echo " [6] para fazer primeira inserção no banco;"
+		echo " [7] para configurar um swarm;"
+		echo " [8] pra configurar server web no cluster;"
+		echo " [9] instalar e configurar o servidor nginx;"
+		echo " 4[0]Ou qualquer outro para voltar ao Menu principal;"
 		
 		read -p "Qual serviço deseja realizar: " servico
 		case "$servico" in
@@ -34,22 +34,31 @@ while true; do
 			;;
 		2)
 			#instalar nfs
-			apt install nfs-common -y
+			apt install nfs-server -y
+			sleep 3
 			continue
 			;;
 		3)	
 			#configurar nfs
 			mkdir -p /nfs/web
-			read -p "digite o IP(xxx.xxx.xxx.xxx/xx) que terao acesso ou (*)pra todos" ip
+			chmod 777 /nfs/web
+			mkdir -p /nfs/db
+			chmod 777 /nfs/db
+			
+			read -p "digite o IP(xxx.xxx.xxx.xxx/xx) que terao acesso(/nfs/web) ou (*)pra todos" ip
 			echo "/nfs/web $ip(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
+			read -p "digite o IP(xxx.xxx.xxx.xxx/xx) que terao acesso(/nfs/db) ou (*)pra todos" ip
+			echo "/nfs/db $ip(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
 			exportfs -ra
 			systemctl restart nfs-server
 			exportfs -v
+			sleep 3
 			continue
 			;;
 		4)
 			#instalar o docker
-			apt install docker.io -y
+			apt install docker.io docker-compose -y
+			sleep 3
 			continue
 			;;
 		5)
@@ -72,7 +81,7 @@ while true; do
 			docker exec -i mysql mysql -uroot -p"$senharoot" -e \
   			"ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY '$senharoot'; FLUSH PRIVILEGES;"
   			echo "Configuração de acesso remoto aplicada."
-
+			sleep 3
 			continue
 			;;
 		6)
@@ -90,12 +99,16 @@ while true; do
 			Endereco varchar(150),
 			Cidade varchar(50),
 			Host varchar(50));"
+			
+			sleep 3
+			docker exec -i mysql mysql -uroot -p"$senharoot" -e "use banco; select * from dados;"
+			sleep 3
 			continue
 			;;
 		7)
     		#configura swarm
     		docker swarm init
-
+			sleep 3
     		# Captura o token do worker
     		token=$(docker swarm join-token worker -q)
 			echo "$token" > /nfs/web/token.txt
@@ -106,7 +119,7 @@ while true; do
 			echo "Comando para adicionar o worker:"
 			echo "docker swarm join --token $token $ip_manager:2377"
 
-
+			sleep 5
    			 continue
     		;;
     	8)
@@ -116,7 +129,7 @@ while true; do
   			--publish 80:80 \
   			--mount type=bind,source=/nfs/web,target=/app \
   			webdevops/php-apache:alpine-php7
-  			
+  			sleep 3
     		continue
     		;;
     	9)
@@ -183,11 +196,12 @@ EOF
 			docker ps
 
 			echo "Configuração concluída com sucesso!"
-
+			sleep 5
     		continue
 			;;
 		*)
 			echo "Voltando"
+			sleep 2
 			continue
 			;;
 		esac
@@ -213,19 +227,25 @@ EOF
 		2)
 			#instalar nfs
 			apt install nfs-common -y
+			sleep 2
 			continue
 			;;
 		3)
 			#configurar nfs
 			mkdir -p /nfs/web
+			chmod 777 /nfs/web
+			mkdir -p /nfs/db
+			chmod 777 /nfs/db
 			read -p "digite o IP do servidor(Manager)" ip
 			echo "$ip:/nfs/web  /nfs/web  nfs  defaults,_netdev  0  0" >> /etc/fstab
 			mount -a
+			sleep 5
 			continue
 			;;
 		4)
 			#instalar o docker
-			apt install docker.io -y
+			apt install docker.io docker-compose -y
+			sleep 3
 			continue
 			;;
 		5)
@@ -237,6 +257,7 @@ EOF
 			else
    				 echo "Token não encontrado. Certifique-se de que o manager já foi configurado."
 			fi
+			sleep 5		
 			continue
 			;;
 
