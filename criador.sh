@@ -15,7 +15,7 @@ while true; do
 		echo "Selecione uma das opções abaixo:"
 		echo " [1] para atualizar o sistema;"
 		echo " [2] para instalar nfs-server;"
-		echo " [3] para configurar o nfs;"
+		echo " [3] para configurar o nfs(criando em /nfs web e db);"
 		echo " [4] para instalar o docker;"
 		echo " [5] para configurar um container mysql;"
 		echo " [6] para fazer primeira inserção no banco;"
@@ -30,12 +30,13 @@ while true; do
 			#atualizar
 			apt update -y
 			apt upgrade -y
+			systemctl status nfs-server
 			continue
 			;;
 		2)
 			#instalar nfs
 			apt install nfs-server -y
-			sleep 3
+			sleep 4
 			continue
 			;;
 		3)	
@@ -52,13 +53,13 @@ while true; do
 			exportfs -ra
 			systemctl restart nfs-server
 			exportfs -v
-			sleep 3
+			sleep 8
 			continue
 			;;
 		4)
 			#instalar o docker
 			apt install docker.io docker-compose -y
-			sleep 3
+			sleep 5
 			continue
 			;;
 		5)
@@ -72,7 +73,7 @@ while true; do
 			-v /nfs/db:/var/lib/mysql \
 			-p 3306:3306 \
 			mysql:8.0
-			
+				
 			# Espera o MySQL iniciar (evita erro de conexão)
 			echo "Aguardando inicialização do MySQL..."
 			sleep 10
@@ -123,9 +124,10 @@ while true; do
    			 continue
     		;;
     	8)
+    		read -p "Quantas replicas deseja: " replicas
     		docker service create \
   			--name web \
- 			--replicas 6 \
+ 			--replicas $replicas \
   			--publish 80:80 \
   			--mount type=bind,source=/nfs/web,target=/app \
   			webdevops/php-apache:alpine-php7
@@ -207,7 +209,8 @@ EOF
 		esac
 		;;
 	
-	2 )
+	2)
+	
 		echo "Selecione uma das opções abaixo:"
 		echo "1 para atualizar o sistema;"
 		echo "2 para instalar nfs-common;"
@@ -222,12 +225,13 @@ EOF
 			#atualizar
 			apt update -y
 			apt upgrade -y
+			sleep 5
 			continue
 			;;
 		2)
 			#instalar nfs
 			apt install nfs-common -y
-			sleep 2
+			sleep 5
 			continue
 			;;
 		3)
@@ -257,7 +261,7 @@ EOF
 			else
    				 echo "Token não encontrado. Certifique-se de que o manager já foi configurado."
 			fi
-			sleep 5		
+			sleep 7	
 			continue
 			;;
 
@@ -269,7 +273,7 @@ EOF
 	;;
 	*)
 		echo "Saindo..."
-		sleep 5
+		sleep 3
 		exit
 		;;
 	esac
